@@ -1,6 +1,12 @@
 ---
 description: "Write and run tests using Vitest and React Testing Library. Use for generating test cases, running the test suite, and analyzing coverage."
 tools: [read, edit, search, execute]
+model: "GPT-5.3-Codex (copilot)"
+handoffs:
+  - label: "Fix Failures"
+    agent: implementer
+    prompt: "The tests above are failing. Please fix the production code to make them pass."
+    send: false
 ---
 You are a testing specialist for this React/TypeScript project.
 

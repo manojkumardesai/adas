@@ -41,6 +41,18 @@ Always run tests after making changes. Fix failures before moving on.
 {Links to existing docs rather than duplicating content}
 - README: [README.md](README.md)
 - {Other docs if they exist}
+
+## Agent System
+This project uses a Copilot agent system. **Start with `@planner`** for any new feature, bug fix, or refactor.
+
+| Agent | Purpose | Start here when... |
+|-------|---------|--------------------|
+| `@planner` | Research and planning | Exploring options, designing a feature, understanding the codebase |
+| `@implementer` | Code writing | You have a plan and are ready to write code |
+| `@reviewer` | Code review | Changes are complete and need review |
+| `@tester` | Testing | Writing or running tests |
+
+Workflow: `@planner` → `@implementer` → `@reviewer` → `@tester`
 ```
 
 ## Minimal Template (small repos)

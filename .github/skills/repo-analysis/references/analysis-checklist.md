@@ -33,6 +33,25 @@ Detailed procedures for each analysis category. Use targeted file reads — do N
    - `main.py` + `fastapi` → FastAPI
    - `main.go` → Go service
 
+5. **Next.js deep detection** (run if `next.config.*` found or `"next"` in `package.json` dependencies):
+   ```bash
+   # Router type
+   ls {target_path}/app 2>/dev/null && echo "App Router" || echo "Pages Router only"
+   ls {target_path}/pages 2>/dev/null && echo "Pages Router present"
+   # RSC usage
+   grep -r '"use client"' {target_path}/app --include="*.tsx" -l 2>/dev/null | wc -l
+   grep -r '"use server"' {target_path}/app --include="*.tsx" -l 2>/dev/null | wc -l
+   # Architecture
+   ls {target_path}/features 2>/dev/null && echo "features/ dir found"
+   ls {target_path}/app/api 2>/dev/null && echo "Route Handlers present"
+   find {target_path}/app -name "middleware.ts" 2>/dev/null
+   ```
+   Classify as:
+   - **North Star Architecture** → `app/` present + feature directories (`features/` or route groups `app/(group)/`) + collocated components/hooks/actions per feature + RSC-first (fewer `"use client"` than `"use server"` or total components)
+   - **App Router standard** → `app/` present, flat or non-feature structure
+   - **Pages Router** → only `pages/`, no `app/`
+   - **Mixed** → both `app/` and `pages/`
+
 ### Output
 - Primary language(s) with confidence
 - Framework(s) detected
@@ -59,6 +78,7 @@ Detailed procedures for each analysis category. Use targeted file reads — do N
    - `src/features/` or `src/modules/` → Feature-based
    - `packages/` or `apps/` → Monorepo
    - Flat `src/` with mixed files → Flat structure
+   - **Next.js North Star**: `app/(group)/` route groups per feature OR `features/` alongside `app/`, colocated `components/hooks/actions/` per feature, thin `app/page.tsx` files that import from feature directories, shared `lib/` or `utils/` layer → North Star Architecture
 
 ### Output
 - Naming convention per entity type

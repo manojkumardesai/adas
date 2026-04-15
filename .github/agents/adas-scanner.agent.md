@@ -25,6 +25,17 @@ Check the repo root for package manager files and read the primary manifest:
 
 **Framework indicators:** `next.config.*`, `nuxt.config.*`, `vite.config.*`, `angular.json`, `tsconfig.json`, framework-specific imports in source files
 
+**Next.js deep detection (run when `next.config.*` or `next` in dependencies is found):**
+- Check for `app/` directory → App Router (Next.js 13+)
+- Check for `pages/` directory → Pages Router (legacy or mixed)
+- Search for `"use client"` directives: `grep -r "use client" {target_path}/app --include="*.tsx" -l | wc -l`
+- Search for `"use server"` directives (Server Actions): `grep -r "use server" {target_path}/app --include="*.tsx" -l | wc -l`
+- Check for feature/module directories: `app/(group)/`, `features/`, `modules/`
+- Check for shared layer: `lib/`, `server/`, `services/`, `shared/`
+- Check for `middleware.ts` at repo root
+- Check for `app/api/` → Route Handlers present
+- **North Star Architecture signals**: feature directories under `app/`, collocated components/hooks/actions per feature, shared `lib/` or `utils/` layer, thin `app/` page files that import from `features/`
+
 Read the primary manifest to extract dependencies, scripts, and metadata.
 
 ### 2. Code Conventions
@@ -39,6 +50,12 @@ Sample 3-5 source files to detect:
 - Import organization patterns
 - Error handling style
 - Architecture pattern (check directory structure: `src/controllers/` = MVC, `src/domain/` = Clean, `src/features/` = Feature-based, `packages/` = Monorepo)
+- **Next.js architecture pattern**: if Next.js detected, specifically look for:
+  - `app/(group)/feature-name/` → route groups per feature = North Star
+  - `features/` or `modules/` alongside `app/` → feature-based North Star
+  - `components/`, `hooks/`, `actions/` colocated per feature → North Star colocation
+  - Server Components as default with selective `"use client"` → RSC-first pattern
+  - Data fetching in `page.tsx` / `layout.tsx` as async server components → App Router patterns
 
 ### 3. Build/Test/Deploy
 

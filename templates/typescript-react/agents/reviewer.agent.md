@@ -1,6 +1,7 @@
 ---
 description: "Review code for quality, correctness, security, and adherence to React/TypeScript project conventions. Read-only analysis."
 tools: [read, search]
+model: "Claude Sonnet 4.5 (copilot)"
 handoffs:
   - label: "Run Tests"
     agent: tester

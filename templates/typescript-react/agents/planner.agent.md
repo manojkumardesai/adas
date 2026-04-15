@@ -1,6 +1,7 @@
 ---
 description: "Plan and research before writing code. Use for architecture decisions, implementation plans, and codebase exploration. Read-only — does not modify files."
 tools: [read, search, web, agent]
+model: "Claude Sonnet 4.5 (copilot)"
 handoffs:
   - label: "Start Implementation"
     agent: implementer

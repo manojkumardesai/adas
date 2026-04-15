@@ -20,14 +20,14 @@ Generate a complete, interconnected suite of VS Code Copilot customization files
 Based on the scan report, decide which files are needed using these signal rules:
 
 #### Agents (always generate at least planner + implementer)
-| Signal | Agent to Create |
-|--------|----------------|
-| Always | `planner.agent.md` — read-only research and planning |
-| Always | `implementer.agent.md` — code writing and editing |
-| Test framework detected | `tester.agent.md` — test writing and execution |
-| CI/CD or deploy config detected | `deployer.agent.md` — deployment workflows |
-| `docs/` folder or extensive README | `docs.agent.md` — documentation writing |
-| Large codebase (500+ files) or security patterns | `reviewer.agent.md` — code review and security |
+| Signal | Agent to Create | Model |
+|--------|-----------------|-------|
+| Always | `planner.agent.md` — read-only research and planning | `Claude Sonnet 4.5 (copilot)` |
+| Always | `implementer.agent.md` — code writing and editing | `GPT-5.3-Codex (copilot)` |
+| Test framework detected | `tester.agent.md` — test writing and execution | `GPT-5.3-Codex (copilot)` |
+| CI/CD or deploy config detected | `deployer.agent.md` — deployment workflows | `GPT-5.3-Codex (copilot)` |
+| `docs/` folder or extensive README | `docs.agent.md` — documentation writing | `Claude Sonnet 4.5 (copilot)` |
+| Large codebase (500+ files) or security patterns | `reviewer.agent.md` — code review and security | `Claude Sonnet 4.5 (copilot)` |
 
 #### Skills (generate when workflow is multi-step or shared)
 | Signal | Skill to Create |
@@ -44,6 +44,10 @@ Based on the scan report, decide which files are needed using these signal rules
 | Test framework detected | `testing.instructions.md` with `applyTo: "**/*.test.*"` or equivalent |
 | API routes/endpoints detected | `api-patterns.instructions.md` with `applyTo` for API directory |
 | Component patterns (React/Vue/etc.) | `component-patterns.instructions.md` with `applyTo` for component files |
+| **Next.js detected (any router)** | `nextjs-conventions.instructions.md` with `applyTo: "**/*.tsx"` — RSC patterns, routing, data fetching |
+| **Next.js App Router + `app/` dir** | `server-components.instructions.md` with `applyTo: "app/**"` — async components, streaming, Server Actions |
+| **Next.js + `app/api/` detected** | `api-routes.instructions.md` with `applyTo: "app/api/**"` — Route Handlers, request/response patterns |
+| **Next.js + feature/module dirs** | `north-star-architecture.instructions.md` — feature boundaries, colocation rules, shared module patterns |
 | Security patterns detected | `security.instructions.md` — on-demand, no applyTo |
 | DB patterns detected | `database.instructions.md` — on-demand or scoped |
 
@@ -112,7 +116,9 @@ After generation, verify:
 1. **Descriptions are the discovery surface** — include trigger phrases that agents will encounter
 2. **One concern per instruction file** — never mix testing + API + styling
 3. **Minimal tool sets** — planner: `[read, search, web]`, implementer: `[read, edit, search, execute]`, reviewer: `[read, search]`
-4. **Link, don't embed** — reference existing project docs rather than copying content
-5. **Quote values with colons** — `description: "Use when: doing X"` not `description: Use when: doing X`
-6. **Skills have folder discipline** — `name` must match folder, use `./` for relative paths
-7. **Scale to complexity** — small repos get 2-3 agents, large repos get the full chain
+4. **Model tiers** — analytical agents (planner, reviewer, docs): `Claude Sonnet 4.5 (copilot)`; coding agents (implementer, tester, deployer): `GPT-5.3-Codex (copilot)`
+5. **Link, don't embed** — reference existing project docs rather than copying content
+6. **Quote values with colons** — `description: "Use when: doing X"` not `description: Use when: doing X`
+7. **Skills have folder discipline** — `name` must match folder, use `./` for relative paths
+8. **Scale to complexity** — small repos get 2-3 agents, large repos get the full chain
+9. **Single agent option** — if user prefers, generate one `{project-name}.agent.md` using the consolidated template with `model: "Claude Sonnet 4.5 (copilot)"` and all tools; all prompts route to it

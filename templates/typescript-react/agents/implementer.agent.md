@@ -1,6 +1,7 @@
 ---
 description: "Write and modify React components, hooks, and TypeScript code following project conventions. Use for implementing features, fixing bugs, and refactoring."
 tools: [read, edit, search, execute]
+model: "GPT-5.3-Codex (copilot)"
 handoffs:
   - label: "Review Changes"
     agent: reviewer
