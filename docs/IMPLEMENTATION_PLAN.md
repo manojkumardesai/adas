@@ -2,6 +2,8 @@
 
 Companion to [FEATURE_SPEC.md](./FEATURE_SPEC.md). This plan turns the spec into sequenced, file-level work. ADAS is a configuration system (Markdown + JSON), so "implementation" = editing the ADAS meta-agent files, skills, references, and adding new generation templates. No build/runtime.
 
+> **Status (implemented):** Phases 0–6 complete. Tech-agnostic generation, agent-friendly context (L0/L1 + mermaid), subagent auto-delegation, `.adas-workspace/` polyrepo support, and the no-commit guardrail are all wired into the ADAS agents, skills, and reference templates. See `_research-notes.md` (schema lock) and `_validation.md` (dry-run scenarios). Remaining items are future/optional.
+
 ---
 
 ## Phase Dependency Graph

@@ -1,6 +1,6 @@
 # ADAS — Advanced Developer Assistance System
 
-A meta-agent that analyzes any repository and generates a complete, interconnected VS Code Copilot agent system.
+A **tech-agnostic** meta-agent that analyzes any repository — or a multi-repo workspace — and generates a complete, interconnected VS Code Copilot agent system. Content always comes from scanning your repo, never from stack presets, so ADAS works on any language or framework.
 
 ## What ADAS Does
 
@@ -13,9 +13,17 @@ You point ADAS at a repo, and it generates:
 | **Reusable skills** | `SKILL.md` + scripts | Multi-step workflows shared across agents |
 | **Specialized agents** | `.agent.md` files | Role-based personas (planner, implementer, reviewer, tester) with handoffs |
 | **Task prompts** | `.prompt.md` files | One-shot tasks routed to the right agent |
-| **Lifecycle hooks** | `.json` configs | Deterministic enforcement (auto-format, block dangerous commands) |
+| **Lifecycle hooks** | `.json` configs | Deterministic enforcement (auto-format, **block commits & dangerous commands**) |
+| **Context layer** | `.github/adas/context.md` + always-on instruction | Persisted, agent-friendly scan grounding (structured text + mermaid) |
+| **Workspace coordinator** | `.adas-workspace/` (multi-repo only) | Auto-delegates work across repos, partitioned & guardrailed |
 
-The generated files form an **interconnected system** — agents hand off to each other, share skills, and prompts route to the right specialist.
+The generated files form an **interconnected system** — agents hand off to each other, delegate to subagents, share skills, and prompts route to the right specialist.
+
+## Design Principles
+
+- **Tech-agnostic** — *topology* (agent roles, handoff chains, subagent graph, guardrails) is universal; *content* (commands, conventions, globs) is filled from the scan. ADAS never matches your repo to a preset.
+- **Agent-friendly context** — the scan is persisted as `context.md` (stable headings + selective mermaid) so every generated agent shares the same grounding.
+- **Guardrailed autonomy** — agents can plan, edit, and test (across multiple repos in parallel), but **never commit**. The working tree is always the stopping point; the human owns every commit.
 
 ## Quick Start
 
@@ -90,6 +98,29 @@ your-repo/.github/
     └── post-edit-format.json                        # Auto-format after edits
 ```
 
+## Multi-Repo Workspaces
+
+ADAS detects your workspace **topology** and adapts:
+
+| Topology | What ADAS generates |
+|---|---|
+| **Single repo** | One standalone `.github/` agent system |
+| **Monorepo** (one git repo, many packages) | Root `copilot-instructions.md` + package-scoped `.instructions.md` |
+| **Polyrepo** (multiple independent repos) | A standalone `.github/` per repo **plus** a `.adas-workspace/` coordinator layer |
+
+For **polyrepo**, ADAS scans each repo (L1 context) and derives a cross-repo **workspace map** (L0) — the dependency graph and shared contracts (OpenAPI/proto, shared packages, env base-URLs). A **workspace coordinator** agent then **auto-delegates** cross-repo work to repo-scoped specialists in parallel (producer-first for interdependent repos), and emits one consolidated change report.
+
+> Add `.adas-workspace/` as a folder in your multi-root workspace so VS Code discovers its agents and hooks.
+
+## Guardrails — No Auto-Commit
+
+Autonomy stops at the working tree. Defense in depth ensures **nothing reaches git history without an explicit human action**:
+
+1. **Hooks** — `block-git-write.json` deterministically denies `git commit/push/reset --hard/checkout -f/clean -fd/rebase` (and `add` chained to commit); `block-dangerous.json` blocks `rm -rf`, force pushes, DB drops.
+2. **Agent contracts** — no editing agent has commit authority; specialists are path-confined to their own repo.
+3. **Consolidated report** — after autonomous work, you get per-repo diffs + test results in one place.
+4. **Human gate** — you review and commit manually (or via "Save to GitHub").
+
 ## Updating Existing Configs
 
 If your repo already has Copilot configuration files, ADAS enters **update mode**:
@@ -115,9 +146,11 @@ ADAS itself is built using VS Code Copilot customization files:
 | `.github/agents/adas.agent.md` | Main orchestrator — user-facing workflow |
 | `.github/agents/adas-scanner.agent.md` | Read-only repo analysis sub-agent |
 | `.github/skills/repo-analysis/` | Deep analysis procedures and checklist |
-| `.github/skills/copilot-generation/` | Generation templates for all 6 primitives |
+| `.github/skills/copilot-generation/` | Generation templates for all primitives + context & workspace-map templates |
 | `.github/instructions/copilot-syntax.instructions.md` | Copilot file format reference |
 | `.github/prompts/init-adas.prompt.md` | Quick-start prompt |
+| `docs/FEATURE_SPEC.md` | Design spec: tech-agnostic, multi-repo, auto-delegation, guardrails |
+| `docs/IMPLEMENTATION_PLAN.md` | Phased implementation plan |
 
 ## Requirements
 

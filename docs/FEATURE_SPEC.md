@@ -210,18 +210,27 @@ flowchart TD
 
 Net effect: agents plan, edit, and test across multiple repos in parallel, but the working tree is always the stopping point — the human owns every commit.
 
-### `block-git-write.json` (sketch)
+### `block-git-write.json` (confirmed schema)
+
+VS Code **ignores `matcher` at runtime**, so the hook registers a script and the *script* decides deny/allow from the stdin payload (Phase 0 finding). Config:
 
 ```json
 {
-  "event": "PreToolUse",
-  "matcher": { "tool": "execute" },
-  "condition": "command matches /\\bgit\\s+(commit|push|reset\\s+--hard|checkout\\s+-f|clean\\s+-fd|rebase)\\b/ OR (command matches /\\bgit\\s+add\\b/ AND command matches /commit/)",
-  "action": "deny",
-  "message": "ADAS guardrail: commits are human-gated. Review the consolidated change report and commit manually."
+  "hooks": {
+    "PreToolUse": [
+      { "type": "command", "command": "./scripts/block-git-write.sh", "timeout": 5 }
+    ]
+  }
 }
 ```
-(Exact hook schema to be confirmed against the current VS Code hooks spec during implementation.)
+
+`scripts/block-git-write.sh` reads the tool input from stdin, and if the command is a git-write (`commit`, `push`, `reset --hard`, `checkout -f`, `clean -fd`, `rebase`, or `add` chained to a commit) emits:
+
+```json
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"ADAS guardrail: commits are human-gated. Review the consolidated change report and commit manually."}}
+```
+
+Otherwise it emits `"permissionDecision":"allow"`. Full script in `.github/skills/copilot-generation/references/hook-templates.md`.
 
 ---
 
@@ -241,10 +250,14 @@ Net effect: agents plan, edit, and test across multiple repos in parallel, but t
 
 ## 9. Open Items / Next Steps
 
-- [ ] Confirm current VS Code hooks JSON schema before finalizing `block-git-write.json`.
-- [ ] Define the machine-parseable section contract for `context.md` (stable headings the agents key off).
-- [ ] Specify the cross-repo contract detectors (OpenAPI, proto, shared package graph, env base-URLs).
-- [ ] Decide whether the coordinator also generates a workspace-level review report file or only renders it in chat.
-- [ ] Update `adas-scanner.agent.md` to emit the layered (L0/L1/L2) + mermaid output.
-- [ ] Update `adas.agent.md` workflow to add subagent auto-delegation alongside handoffs.
-- [ ] Demote `templates/*` to shape references; remove stack-specific content from the generation path.
+- [x] Confirm current VS Code hooks JSON schema before finalizing `block-git-write.json`. *(Phase 0: `matcher` is ignored at runtime; script-driven deny via `permissionDecision`. See `_research-notes.md`.)*
+- [x] Define the machine-parseable section contract for `context.md` (stable headings the agents key off). *(Phase 0: see `_research-notes.md` and `context-templates.md`.)*
+- [x] Specify the cross-repo contract detectors. *(analysis-checklist §9: shared packages, OpenAPI/proto/GraphQL, env base-URLs, resolved imports.)*
+- [x] Decide whether the coordinator writes a review report file or renders in chat. *(Renders in chat; no auto-write, to avoid spurious working-tree changes the guardrail would flag.)*
+- [x] Update `adas-scanner.agent.md` to emit the layered (L0/L1) + mermaid output.
+- [x] Update `adas.agent.md` workflow to add subagent auto-delegation alongside handoffs.
+- [x] Demote `templates/*` to shape references; remove stack-specific content from the generation path.
+
+Remaining (future):
+- [ ] Optional `--write-report` flag for a persisted workspace review report.
+- [ ] Nested-subagent depth tuning once VS Code's setting stabilizes.
