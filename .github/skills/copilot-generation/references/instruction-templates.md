@@ -2,6 +2,30 @@
 
 Templates for generating `.instructions.md` files with appropriate `applyTo` patterns and keyword-rich descriptions.
 
+## Project Context (always-on)
+
+Generate this for **every** repo. No `applyTo` → always loaded. It points every agent at the persisted scan so they share the same grounding.
+
+```markdown
+---
+description: "Always-on project grounding. Read the repo context before planning, editing, reviewing, or testing — it holds the stack, commands, conventions, architecture, and capabilities for this repo."
+---
+# Project Context
+
+Before doing anything, read [`.github/adas/context.md`](./adas/context.md). It is the source of truth for:
+- Tech stack and exact build/test/lint/run commands
+- Naming and architecture conventions (follow them; do not invent new ones)
+- Architecture and key flows (diagrams)
+- Detected capabilities
+
+Do not duplicate that content here — read it. If a command or convention is missing from `context.md`, ask rather than guess.
+
+## Guardrail (all agents)
+- Work ends at a dirty working tree. **Never** run `git commit`, `git push`, or any history-writing git command — commits are human-gated.
+{multi-repo only:}
+- Stay within this repo's directory. Cross-repo work is coordinated by the workspace coordinator.
+```
+
 ## Language Conventions
 
 ### TypeScript

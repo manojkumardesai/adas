@@ -204,3 +204,48 @@ git -C {target_path} log --pretty=format: --name-only -50 | sort | uniq -c | sor
 - Service boundaries if applicable
 - Shared libraries if applicable
 - Complexity rating: small (<50 files) / medium (50-500) / large (500+)
+
+## 8b. Capabilities (drives generation)
+
+Record each as detected or `None`. These map directly to generated agents/skills/instructions (capability-driven, not language-driven):
+
+- **test-runner**: framework + run command
+- **formatter/linter**: tool + command
+- **ci/cd**: platform + workflow path
+- **api-surface**: routes dir, OpenAPI/Swagger, or proto files
+- **ui-framework**: React/Vue/Svelte/etc. + component file pattern
+- **db/migrations**: ORM/migration tool + migrations dir
+
+## 9. Workspace Topology & Cross-Repo Contracts
+
+Run only when more than one repo/package is in scope.
+
+### Topology
+- **Single**: one repo, one manifest.
+- **Monorepo**: `turbo.json` / `nx.json` / `pnpm-workspace.yaml` / `lerna.json`, or `packages/`+`apps/` with multiple manifests in one git repo.
+- **Polyrepo**: multiple independent git repos as separate workspace folders (each has its own `.git`).
+
+### Cross-Repo Contract Detection (language-agnostic)
+Detect *between-repo* relationships from:
+- **Shared packages**: a repo published/consumed as a dependency of another (match manifest dep names to a sibling repo's package name)
+- **API contracts**: `openapi.{yaml,json}`, `swagger.json`, `*.proto`, GraphQL `*.graphql` SDL shared across repos
+- **Runtime coupling**: env base-URLs (`*_API_URL`, `*_BASE_URL` in `.env.example`) pointing at a sibling service
+- **Resolved imports**: imports/`replace` directives referencing a sibling repo path
+
+### Output
+- Topology: single / monorepo / polyrepo
+- Per cross-repo edge: producer → consumer, contract type, location
+- Producer-first delegation order
+
+## Mermaid Guidance (agent-friendly output)
+
+Draw a diagram only when the information *is* a graph. Otherwise use tables/text.
+
+| Use | Mermaid | Don't draw for |
+|-----|---------|----------------|
+| Module/layer dependencies | `flowchart TD` | a flat list of files |
+| Primary request/auth/data flow | `sequenceDiagram` | a single function |
+| Build → test → deploy pipeline | `flowchart LR` | one command |
+| Cross-repo dependencies (L0) | `flowchart LR` | a single repo |
+
+Keep diagrams small (≤ ~12 nodes). Prefer one clear diagram over several noisy ones.

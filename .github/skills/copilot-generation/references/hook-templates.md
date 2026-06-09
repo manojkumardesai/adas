@@ -76,6 +76,57 @@ fi
 echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
 ```
 
+## Block Git Write Commands Hook (no auto-commit guardrail)
+
+The core ADAS guardrail: agents may edit and run commands, but **never reach git history**. Generate for **every** ADAS-managed repo and for `.adas-workspace/`. `matcher` is ignored by VS Code at runtime, so the script inspects the stdin payload and denies.
+
+### hooks/block-git-write.json
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./scripts/block-git-write.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}
+```
+
+### scripts/block-git-write.sh
+
+```bash
+#!/usr/bin/env bash
+# Blocks any git command that writes to history or destroys the working tree.
+# Autonomy stops at a dirty working tree — the human reviews and commits.
+set -euo pipefail
+
+INPUT=$(cat)
+TOOL_NAME=$(echo "$INPUT" | grep -o '"toolName":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
+
+if [ "$TOOL_NAME" = "terminal" ] || [ "$TOOL_NAME" = "execute" ]; then
+  COMMAND=$(echo "$INPUT" | grep -o '"command":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
+
+  # Deny git history writes and destructive tree ops
+  if echo "$COMMAND" | grep -qE '\bgit\s+(commit|push|reset\s+--hard|checkout\s+-f|clean\s+-(f|d)|rebase|cherry-pick|merge|tag|stash\s+drop)\b'; then
+    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"ADAS guardrail: git writes are human-gated. Review the consolidated change report and commit manually."}}'
+    exit 0
+  fi
+  # Deny `git add ... && ... commit` one-liners
+  if echo "$COMMAND" | grep -qE '\bgit\s+add\b' && echo "$COMMAND" | grep -qE 'commit'; then
+    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"ADAS guardrail: staging chained to a commit is blocked. Commits are human-gated."}}'
+    exit 0
+  fi
+fi
+
+echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
+```
+
+This is independent of `block-dangerous.json` (which covers `rm -rf`, force pushes, DB drops). Generate **both**.
+
 ## Session Start Context Hook
 
 Injects project context at the start of each agent session. Useful for large repos.

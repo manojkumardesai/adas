@@ -50,6 +50,35 @@ If your repo already has Copilot configs:
 
 ADAS re-scans and proposes incremental updates.
 
+## Multi-Repo (Polyrepo) Workspaces
+
+When your multi-root workspace contains several independent repos (e.g., `web`, `api`, `shared-lib`), ADAS works across all of them:
+
+1. Add each repo as a workspace folder, **plus** add the generated `.adas-workspace/` folder once it exists.
+2. Invoke `@adas` and name the target repos (or say "scan the whole workspace").
+3. ADAS scans each repo (L1 context) and builds a cross-repo map (L0) — dependency direction and shared contracts.
+4. It proposes: a standalone `.github/` per repo + a `.adas-workspace/` coordinator.
+
+After generation, pick **@workspace-coordinator** for cross-repo tasks. It auto-delegates to repo specialists in parallel (producer-first when repos depend on each other) and returns one consolidated change report.
+
+```
+WORKSPACE
+├── .adas-workspace/     ← coordinator + cross-repo map + guardrail hooks
+├── web/.github/         ← standalone agent system
+├── api/.github/         ← standalone agent system
+└── shared-lib/.github/  ← standalone agent system
+```
+
+## Guardrails — No Auto-Commit
+
+ADAS-generated systems never commit on your behalf. Even fully autonomous, cross-repo work stops at a dirty working tree:
+
+- A `block-git-write` hook deterministically denies any history-writing git command.
+- Agents are instructed they have no commit authority; specialists stay inside their own repo.
+- You get a consolidated diff + test report, then commit manually (or via **Save to GitHub**).
+
+If an agent ever tries to commit, the hook blocks it and explains why — by design.
+
 ## Understanding Generated Files
 
 ### Agents (.agent.md)
